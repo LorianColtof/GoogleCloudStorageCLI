@@ -8,9 +8,9 @@ import os.path
 import click
 import shlex
 
-from lexer import GCSShellLexer
-from commands import commands, ArgumentError
-from path import Path
+from .lexer import GCSShellLexer
+from .commands import commands, ArgumentError
+from .path import Path
 
 
 class ClientWrapper:
@@ -60,7 +60,7 @@ def get_rprompt(project):
     ]
 
 
-def main():
+def run():
     history = pthistory.FileHistory(
         os.path.join(os.path.expanduser('~'), '.gcloudstorageclihistory'))
 
@@ -79,6 +79,3 @@ def main():
             continue
 
     print("Bye!")
-
-if __name__ == '__main__':
-    main()

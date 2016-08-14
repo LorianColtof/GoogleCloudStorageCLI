@@ -1,6 +1,6 @@
 from pygments.lexer import RegexLexer
 from pygments.token import Name, String, Text
-from commands import commands
+from .commands import commands
 
 
 class GCSShellLexer(RegexLexer):
