@@ -19,7 +19,8 @@ setup(name='gcloudstoragecli',
       install_requires=[
           'prompt_toolkit>=1.0.5',
           'pygments>=2.1',
-          'click>=6.6'
+          'click>=6.6',
+          'gcloud>=0.18'
       ],
       entry_points={
           'console_scripts': [
