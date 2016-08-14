@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
-
+import os
 from setuptools import setup
-import gcloudstoragecli
+
+long_description = open(
+    os.path.join(
+        os.path.dirname(__file__),
+        'README.rst'
+    )
+).read()
 
 setup(name='gcloudstoragecli',
       author='Lorian Coltof',
       author_email='loriancoltof@gmail.com',
       url='https://github.com/lorian1333/GoogleCloudStorageCLI',
-      long_description=gcloudstoragecli.__doc__,
+      long_description=long_description,
       packages=['gcloudstoragecli'],
       version='0.0.1',
       install_requires=[
