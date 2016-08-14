@@ -27,7 +27,7 @@ def get_prompt(path):
 
 
 def print_error(s):
-    click.secho(str(s), err=True, fg='red')
+    click.secho(str(s), err=True, fg='red', bold=True)
 
 
 def execute_command(input_line, client):
@@ -72,12 +72,11 @@ def main():
                              history=history,
                              lexer=PygmentsLexer(GCSShellLexer),
                              get_rprompt_tokens=get_rprompt(client.project))
+            execute_command(text, client)
         except EOFError:
             break
         except KeyboardInterrupt:
             continue
-
-        execute_command(text, client)
 
     print("Bye!")
 

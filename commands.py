@@ -16,7 +16,14 @@ def change_dir(command, args, client):
     client.cwd = new_path
 
 
-def list_blobs(command, args, client):
+def list_blobs(blobs):
+    for (obj_name, is_dir) in sorted(blobs):
+        click.secho(obj_name, nl=True, bold=(True if is_dir else False),
+                    fg=('blue' if is_dir else 'yellow'))
+    print("")
+
+
+def list_contents(command, args, client):
     if client.cwd.is_root():
         result = ((b.name, True) for b in client.list_buckets())
     else:
@@ -39,10 +46,41 @@ def list_blobs(command, args, client):
             else:
                 result.add((name, False))
 
-    for (obj_name, is_dir) in sorted(result):
-        click.secho(obj_name, nl=True, bold=(True if is_dir else False),
-                    fg=('blue' if is_dir else 'yellow'))
-    print("")
+    list_blobs(result)
+
+
+def list_buckets(command, args, client):
+    result = ((b.name, True) for b in client.list_buckets())
+    list_blobs(result)
+
+
+def print_blob_contents(command, args, client):
+    if len(args) < 1:
+        raise ArgumentError('No file specified')
+
+    arg = args[0]
+    path = Path(client, arg)
+    if path.is_directory():
+        raise ArgumentError('Is a directory: ' + arg)
+    elif not path.exists():
+        raise ArgumentError('No such file: ' + arg)
+
+    contents_raw = path.get_blob().download_as_string()
+    contents = None
+    try:
+        contents = contents_raw.decode('utf-8')
+    except UnicodeDecodeError:
+        if click.confirm(
+                '''Failed to decode file as UTF-8. It might not be a text file.
+Still display the contents?'''):
+            contents = contents_raw.decode('utf-8', 'replace')
+
+    if contents is not None:
+        print(contents)
+
+
+def exit(command, args, client):
+    raise EOFError()
 
 
 class ArgumentError(Exception):
@@ -59,11 +97,12 @@ def not_implemented(command, args, client):
 commands = {
     'cd': change_dir,
     'changeproject': not_implemented,
-    'ls': list_blobs,
-    'listbuckets': not_implemented,
+    'ls': list_contents,
+    'lsbucket': list_buckets,
     'lb': not_implemented,
     'mv': not_implemented,
     'cp': not_implemented,
+    'cat': print_blob_contents,
     'rm': not_implemented,
     'removebucket': not_implemented,
     'rb': not_implemented,
@@ -73,5 +112,6 @@ commands = {
     'makebucket': not_implemented,
     'mb': not_implemented,
     'rsync': not_implemented,
-    'stat': not_implemented
+    'stat': not_implemented,
+    'exit': exit
 }

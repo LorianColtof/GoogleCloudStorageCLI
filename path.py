@@ -54,6 +54,12 @@ class Path:
             self._bucket_obj = False
             return None
 
+    def get_blob(self):
+        if not self.exists() or self.is_directory():
+            return None
+
+        return self._blob_obj
+
     def exists(self):
         if self._exists is not None:
             return self._exists
