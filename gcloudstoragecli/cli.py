@@ -26,8 +26,8 @@ def get_prompt(path):
     return "gs://{} > ".format(path)
 
 
-def print_error(s):
-    click.secho(str(s), err=True, fg='red', bold=True)
+def print_error(s, bold=True):
+    click.secho(str(s), err=True, fg='red', bold=bold)
 
 
 def execute_command(input_line, client):
@@ -60,11 +60,31 @@ def get_rprompt(project):
     ]
 
 
+def exit_client_error(exception=None):
+    print_error("Could not initialize GCloud client")
+    if exception is not None:
+        print("\nThe error message was:")
+        print_error("  " + str(exception), bold=False)
+
+    print("""
+This most likely occurred due to an authentication error.
+If you did not authenticate yet, run:
+
+  $ gcloud auth login
+""")
+    exit()
+
+
 def run():
     history = pthistory.FileHistory(
         os.path.join(os.path.expanduser('~'), '.gcloudstorageclihistory'))
 
-    client = ClientWrapper(storage.Client())
+    try:
+        client = ClientWrapper(storage.Client())
+    except EnvironmentError:
+        exit_client_error()
+    except Exception as ex:
+        exit_client_error(ex)
 
     while True:
         try:
