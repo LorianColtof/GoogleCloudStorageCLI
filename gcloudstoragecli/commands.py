@@ -1,7 +1,39 @@
 from .path import Path
+from prompt_toolkit.shortcuts import clear
 import click
 
+commands_dict = {}
 
+
+class ArgumentError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return str(self.value)
+
+
+def command(name=None):
+    def register(func):
+        if name in commands_dict:
+            raise ValueError("Command '{}' already registered".format(
+                name))
+        commands_dict[name] = func
+        return func
+    return register
+
+
+@command('clear')
+def clear_screen(command, args, client):
+    clear()
+
+
+@command('exit')
+def exit(command, args, client):
+    raise EOFError()
+
+
+@command('cd')
 def change_dir(command, args, client):
     if len(args) == 0:
         raise ArgumentError('No directory specified')
@@ -23,6 +55,7 @@ def list_blobs(blobs):
     print("")
 
 
+@command('ls')
 def list_contents(command, args, client):
     if client.cwd.is_root():
         result = ((b.name, True) for b in client.list_buckets())
@@ -49,11 +82,13 @@ def list_contents(command, args, client):
     list_blobs(result)
 
 
+@command('lsbucket')
 def list_buckets(command, args, client):
     result = ((b.name, True) for b in client.list_buckets())
     list_blobs(result)
 
 
+@command('cat')
 def print_blob_contents(command, args, client):
     if len(args) < 1:
         raise ArgumentError('No file specified')
@@ -79,39 +114,16 @@ Still display the contents?'''):
         print(contents)
 
 
-def exit(command, args, client):
-    raise EOFError()
-
-
-class ArgumentError(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return str(self.value)
-
-
+@command('mv')
+@command('mkdir')
+@command('cp')
+@command('rm')
+@command('rmbucket')
+@command('du')
+@command('mkbucket')
+@command('stat')
+@command('rsync')
+@command('lsproject')
+@command('chproject')
 def not_implemented(command, args, client):
-    raise NotImplementedError("command not implemented")
-
-commands = {
-    'cd': change_dir,
-    'changeproject': not_implemented,
-    'ls': list_contents,
-    'lsbucket': list_buckets,
-    'lb': not_implemented,
-    'mv': not_implemented,
-    'cp': not_implemented,
-    'cat': print_blob_contents,
-    'rm': not_implemented,
-    'removebucket': not_implemented,
-    'rb': not_implemented,
-    'du': not_implemented,
-    'hash': not_implemented,
-    'mkdir': not_implemented,
-    'makebucket': not_implemented,
-    'mb': not_implemented,
-    'rsync': not_implemented,
-    'stat': not_implemented,
-    'exit': exit
-}
+    raise ArgumentError("command not implemented yet")

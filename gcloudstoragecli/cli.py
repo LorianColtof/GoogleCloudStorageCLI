@@ -3,14 +3,22 @@ import prompt_toolkit.history as pthistory
 from prompt_toolkit.token import Token
 from prompt_toolkit.layout.lexers import PygmentsLexer
 
+from prompt_toolkit.styles import style_from_pygments
+from pygments.styles.default import DefaultStyle
+
 from gcloud import storage
 import os.path
 import click
 import shlex
 
 from .lexer import GCSShellLexer
-from .commands import commands, ArgumentError
 from .path import Path
+from .commands import commands_dict, ArgumentError
+
+style = style_from_pygments(
+    DefaultStyle, {
+        Token.RPrompt: '#7baec0 bold',
+    })
 
 
 class ClientWrapper:
@@ -43,11 +51,10 @@ def execute_command(input_line, client):
     command = tokens[0]
     args = tokens[1:]
 
-    if command in commands:
+    if command in commands_dict:
         try:
-            commands[command](command, args, client)
+            commands_dict[command](command, args, client)
         except ArgumentError as e:
-        #except Exception as e:
             print_error(command + ": " + str(e))
     else:
         print_error(command + ": command not found")
@@ -55,7 +62,7 @@ def execute_command(input_line, client):
 
 def get_rprompt(project):
     return lambda cli: [
-        (Token.Rprompt, project),
+        (Token.RPrompt, project),
         (Token, ' ')
     ]
 
@@ -67,10 +74,17 @@ def exit_client_error(exception=None):
         print_error("  " + str(exception), bold=False)
 
     print("""
-This most likely occurred due to an authentication error.
-If you did not authenticate yet, run:
+There are two likely reasons for this:
+1. An an authentication error occurred.
+   If you did not authenticate yet, run:
 
-  $ gcloud auth login
+     $ gcloud auth login
+
+2. The default project has not been set.
+   To set the default project, run:
+
+     $ gcloud config set project PROJECT_ID
+
 """)
     exit()
 
@@ -89,8 +103,8 @@ def run():
     while True:
         try:
             text = pt.prompt(get_prompt(client.cwd.get_path()),
-                             history=history,
                              lexer=PygmentsLexer(GCSShellLexer),
+                             style=style, history=history,
                              get_rprompt_tokens=get_rprompt(client.project))
             execute_command(text, client)
         except EOFError:
